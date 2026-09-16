@@ -39,25 +39,25 @@ class WeatherApiService {
     return WeatherLocation.fromJson(data);
   }
  
-  Future<List<WeatherLocation>> listLocations() async {
+  Future<List<WeatherLocation>> getSavedLocations() async {
     final uri = Uri.parse('$baseUrl/v1/locations');
     final data = await _client.getData(uri);
     final items = data['items'] as List<dynamic>;
     return items.map((e) => WeatherLocation.fromJson(e as Map<String, dynamic>)).toList();
   }
  
-  Future<WeatherLocation> getLocation(String locationId) async {
+  Future<WeatherLocation> getSavedLocation(String locationId) async {
     final uri = Uri.parse('$baseUrl/v1/locations/$locationId');
     final data = await _client.getData(uri);
     return WeatherLocation.fromJson(data);
   }
  
-  Future<void> deleteLocation(String locationId) async {
+  Future<void> deleteSavedLocation(String locationId) async {
     final uri = Uri.parse('$baseUrl/v1/locations/$locationId');
     await _client.deleteData(uri);
   }
  
-  Future<Map<String, dynamic>> getCurrent(
+  Future<Map<String, dynamic>> getCurrentWeather(
     String locationId, {
     List<String> fields = const [CurrentField.temperature2m, CurrentField.weatherCode],
   }) async {
@@ -67,7 +67,7 @@ class WeatherApiService {
     return _client.getData(uri);
   }
  
-  Future<Map<String, dynamic>> getHourly(
+  Future<Map<String, dynamic>> getHourlyWeather(
     String locationId, {
     List<String> fields = const [HourlyField.temperature2m, HourlyField.weatherCode],
     int forecastDays = 7,
@@ -87,7 +87,7 @@ class WeatherApiService {
     return _client.getData(uri);
   }
  
-  Future<Map<String, dynamic>> getDaily(
+  Future<Map<String, dynamic>> getDailyWeather(
     String locationId, {
     List<String> fields = const [DailyField.temperature2mMax, DailyField.temperature2mMin, DailyField.weatherCode],
     int forecastDays = 7,
