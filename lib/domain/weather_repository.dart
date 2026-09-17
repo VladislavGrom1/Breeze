@@ -13,7 +13,7 @@ class WeatherRepository {
   
 
   Future<List<WeatherLocation>> getSavedLocations() async {
-    return await weatherApiService.listLocations();
+    return await weatherApiService.getSavedLocations();
   }
 
   Future<WeatherLocation> createLocation(String name, double latitude, double longitude) async {
@@ -25,10 +25,18 @@ class WeatherRepository {
   }
 
   Future<Map<String, dynamic>> getCurrentWeather(String locationId) async {
-    return await weatherApiService.getCurrent(locationId);
+    return await weatherApiService.getCurrentWeather(locationId);
+  }
+
+  Future<Map<String, dynamic>> getDailyWeather(String locationId) async {
+    return await weatherApiService.getDailyWeather(locationId);
+  }
+
+  Future<Map<String, dynamic>> getHourlyWeather(String locationId) async {
+    return await weatherApiService.getHourlyWeather(locationId);
   }
  
   Future<void> deleteSavedLocation(String locationId) async {
-    return await weatherApiService.deleteLocation(locationId);
+    return await weatherApiService.deleteSavedLocation(locationId);
   }  
 }

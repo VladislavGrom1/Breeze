@@ -70,7 +70,7 @@ class WeatherApiService {
   Future<Map<String, dynamic>> getHourlyWeather(
     String locationId, {
     List<String> fields = const [HourlyField.temperature2m, HourlyField.weatherCode],
-    int forecastDays = 7,
+    int forecastDays = 1,
     int pastDays = 0,
     String? startDate,
     String? endDate,
@@ -89,7 +89,10 @@ class WeatherApiService {
  
   Future<Map<String, dynamic>> getDailyWeather(
     String locationId, {
-    List<String> fields = const [DailyField.temperature2mMax, DailyField.temperature2mMin, DailyField.weatherCode],
+    List<String> fields = const [
+      DailyField.temperature2mMean, 
+      DailyField.weatherCode
+    ],
     int forecastDays = 7,
   }) async {
     final uri = Uri.parse('$baseUrl/v1/locations/$locationId/daily').replace(

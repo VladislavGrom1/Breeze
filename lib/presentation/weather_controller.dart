@@ -52,9 +52,13 @@ class WeatherController {
     weatherState.value = weatherState.value.copyWith(status: WeatherStatus.loading);
     try{
       final current = await _weatherRepository.getCurrentWeather(location.locationId);
+      final hourly = await _weatherRepository.getHourlyWeather(location.locationId);
+      final daily = await _weatherRepository.getDailyWeather(location.locationId);
       weatherState.value = WeatherState(
         status: WeatherStatus.loaded,
         currentWeather: current,
+        hourlyWeather: hourly["hourly"],
+        dailyWeather: daily["daily"],
         cityLabel: location.label,
       );
     } catch(e) {

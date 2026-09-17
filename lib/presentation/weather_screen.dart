@@ -3,6 +3,8 @@ import 'package:breeze/app/service_provider.dart';
 import 'package:breeze/presentation/city_search_state.dart';
 import 'package:breeze/presentation/weather_controller.dart';
 import 'package:breeze/presentation/weather_state.dart';
+import 'package:breeze/presentation/widgets/daily_weather_widget.dart';
+import 'package:breeze/presentation/widgets/hourly_weather_widget.dart';
 import 'package:flutter/material.dart';
 
 class WeatherScreen extends StatefulWidget {
@@ -15,6 +17,8 @@ class WeatherScreen extends StatefulWidget {
 class _WeatherScreenState extends State<WeatherScreen> {
   late final WeatherController _controller;
   final _searchController = TextEditingController();
+  final _searchScrollController = ScrollController();
+  final _weatherScrollController = ScrollController();
   bool _initialized = false;
   Timer? _debounce;
 
@@ -47,6 +51,8 @@ class _WeatherScreenState extends State<WeatherScreen> {
     _debounce?.cancel();
     _controller.dispose();
     _searchController.dispose();
+    _searchScrollController.dispose();
+    _weatherScrollController.dispose();
     super.dispose();
   }
 
@@ -63,6 +69,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
       backgroundColor: const Color.fromARGB(255, 217, 215, 215),
       body: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _buildSearchLocationsWidget(),
           _buildLocationWeatherInfoWidget(),
@@ -108,63 +115,77 @@ class _WeatherScreenState extends State<WeatherScreen> {
                         child: Text('Ошибка: ${searchState.errorMessage}'),
                       );
                     case CitySearchStatus.loaded:
-                      return CustomScrollView(
-                        slivers: [
-                          if (searchState.searchResults.isEmpty)
-                            SliverList.separated(
-                              itemCount: searchState.savedLocations.length,
-                              separatorBuilder: (_, __) =>
-                                  const SizedBox(height: 10),
-                              itemBuilder: (context, index) {
-                                final location =
-                                    searchState.savedLocations[index];
-                                return Material(
-                                  color: Colors.grey,
-                                  child: ListTile(
-                                    title: Text(
-                                      location.label ?? "Имя отсутствует",
-                                    ),
-                                    subtitle: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      mainAxisAlignment: MainAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          "Ш:${location.latitude} Д:${location.longitude}",
+                      return Scrollbar(
+                        controller: _searchScrollController,
+                        thumbVisibility: true,
+                        child: CustomScrollView(
+                          controller: _searchScrollController,
+                          slivers: [
+                            if (searchState.searchResults.isEmpty)
+                              SliverList.separated(
+                                itemCount: searchState.savedLocations.length,
+                                separatorBuilder: (_, _) => const SizedBox(height: 10),
+                                itemBuilder: (context, index) {
+                                  final location =
+                                      searchState.savedLocations[index];
+                                  return Material(
+                                    color: Colors.grey,
+                                    child: ListTile(
+                                      title: Text(
+                                        location.label ?? "Имя отсутствует",
+                                      ),
+                                      subtitle: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            "Ш:${location.latitude} Д:${location.longitude}",
+                                          ),
+                                          Text(location.timezone ?? "-"),
+                                        ],
+                                      ),
+                                      trailing: IconButton(
+                                        icon: const Icon(
+                                          Icons.delete,
+                                          color: Colors.red,
                                         ),
-                                        Text(location.timezone ?? "-"),
-                                      ],
+                                        onPressed: () async {
+                                          await _controller
+                                              .deleteSavedLocation(location);
+                                        },
+                                      ),
+                                      onTap: () async {
+                                        await _controller.getWeather(
+                                          location,
+                                        );
+                                      },
                                     ),
-                                    trailing: IconButton(
-                                      icon: Icon(Icons.delete, color: Colors.red),
-                                      onPressed: () async {
-                                        await _controller.deleteSavedLocation(location);
-                                      } 
+                                  );
+                                },
+                              )
+                            else
+                              SliverList.separated(
+                                itemCount: searchState.searchResults.length,
+                                separatorBuilder: (_, _) => const SizedBox(height: 1),
+                                itemBuilder: (context, index) {
+                                  final city =
+                                      searchState.searchResults[index];
+                                  return ListTile(
+                                    title: Text(city.name),
+                                    subtitle: city.country != null
+                                        ? Text(city.country!)
+                                        : null,
+                                    trailing: const Icon(
+                                      Icons.chevron_right,
                                     ),
-                                    onTap: () async {
-                                      await _controller.getWeather(location);
-                                    },
-                                  ),
-                                );
-                              },
-                            )
-                          else
-                            SliverList.separated(
-                              itemCount: searchState.searchResults.length,
-                              separatorBuilder: (_, __) =>
-                                  const SizedBox(height: 1),
-                              itemBuilder: (context, index) {
-                                final city = searchState.searchResults[index];
-                                return ListTile(
-                                  title: Text(city.name),
-                                  subtitle: city.country != null
-                                      ? Text(city.country!)
-                                      : null,
-                                  trailing: const Icon(Icons.chevron_right),
-                                  onTap: () => _controller.selectCity(city),
-                                );
-                              },
-                            ),
-                        ],
+                                    onTap: () => _controller.selectCity(city),
+                                  );
+                                },
+                              ),
+                          ],
+                        ),
                       );
                   }
                 },
@@ -186,50 +207,54 @@ class _WeatherScreenState extends State<WeatherScreen> {
           top: 20,
           bottom: 20,
         ),
-        child: Column(
-          children: [
-            const Text("Погода"),
-            const SizedBox(height: 20),
-            Expanded(
-              child: ValueListenableBuilder<WeatherState>(
-                valueListenable: _controller.weatherState,
-                builder: (context, weather, child) {
-                  switch (weather.status) {
-                    case WeatherStatus.loading:
-                      return const Center(child: CircularProgressIndicator());
-                    case WeatherStatus.error:
-                      return Center(
-                        child: Text('Ошибка: ${weather.errorMessage}'),
-                      );
-                    case WeatherStatus.loaded:
-                      final current =
-                          weather.currentWeather?['current']
-                              as Map<String, dynamic>?;
-                      final temp = current?['temperature_2m'];
-                      return Center(
+        child: ValueListenableBuilder<WeatherState>(
+          valueListenable: _controller.weatherState,
+          builder: (context, weatherState, child) {
+            switch (weatherState.status) {
+              case WeatherStatus.initial:
+                return const SizedBox.shrink();
+              case WeatherStatus.loading:
+                return const Center(child: CircularProgressIndicator());
+              case WeatherStatus.error:
+                return Center(
+                  child: Text('Ошибка: ${weatherState.errorMessage}'),
+                );
+              case WeatherStatus.loaded:
+                final current = weatherState.currentWeather?['current'] as Map<String, dynamic>?;
+                final temp = current?['temperature_2m'];
+                return Scrollbar(
+                  controller: _weatherScrollController,
+                  thumbVisibility: true,
+                  child: CustomScrollView(
+                    controller: _weatherScrollController,
+                    slivers: [
+                      SliverToBoxAdapter(
                         child: Column(
-                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            if (weather.cityLabel != null)
-                              Text(
-                                weather.cityLabel!,
-                                style: Theme.of(context).textTheme.titleLarge,
-                              ),
+                            Text(
+                              weatherState.cityLabel ?? "Нет данных",
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
                             const SizedBox(height: 8),
                             Text(
                               temp != null ? '$temp°C' : 'Нет данных',
-                              style: Theme.of(context).textTheme.headlineMedium,
+                              style: Theme.of(
+                                context,
+                              ).textTheme.headlineMedium,
                             ),
+                            const SizedBox(height: 40),
                           ],
                         ),
-                      );
-                    case WeatherStatus.initial:
-                      return const SizedBox.shrink();
-                  }
-                },
-              ),
-            ),
-          ],
+                      ),
+                      SliverToBoxAdapter(child: HourlyWeatherWidget(hourlyWeather: weatherState.hourlyWeather)),
+                      const SliverToBoxAdapter(child: SizedBox(height: 20)),
+                      SliverToBoxAdapter(child: DailyWeatherWidget(dailyWeather: weatherState.dailyWeather)),
+                    ],
+                  ),
+                );
+            }
+          },
         ),
       ),
     );
