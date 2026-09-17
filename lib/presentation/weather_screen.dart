@@ -112,7 +112,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
                       return const Center(child: CircularProgressIndicator());
                     case CitySearchStatus.error:
                       return Center(
-                        child: Text('Ошибка: ${searchState.errorMessage}'),
+                        child: SelectableText('Ошибка: ${searchState.errorMessage}'),
                       );
                     case CitySearchStatus.loaded:
                       return Scrollbar(
@@ -217,11 +217,10 @@ class _WeatherScreenState extends State<WeatherScreen> {
                 return const Center(child: CircularProgressIndicator());
               case WeatherStatus.error:
                 return Center(
-                  child: Text('Ошибка: ${weatherState.errorMessage}'),
+                  child: SelectableText('Ошибка: ${weatherState.errorMessage}'),
                 );
               case WeatherStatus.loaded:
-                final current = weatherState.currentWeather?['current'] as Map<String, dynamic>?;
-                final temp = current?['temperature_2m'];
+                final temp = weatherState.currentWeather?.temperature2m;
                 return Scrollbar(
                   controller: _weatherScrollController,
                   thumbVisibility: true,

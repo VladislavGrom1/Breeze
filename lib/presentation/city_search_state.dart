@@ -1,5 +1,5 @@
-import 'package:breeze/data/geocode_result.dart';
-import 'package:breeze/data/weather_location.dart';
+import 'package:breeze/data/model/geocode_result.dart';
+import 'package:breeze/data/model/weather_location.dart';
 import 'package:flutter/material.dart';
 
 enum CitySearchStatus { initial, loading, loaded, error }

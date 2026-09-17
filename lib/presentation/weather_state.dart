@@ -1,3 +1,6 @@
+import 'package:breeze/data/model/current_weather_info.dart';
+import 'package:breeze/data/model/daily_weather_info.dart';
+import 'package:breeze/data/model/hourly_weather_info.dart';
 import 'package:flutter/material.dart';
 
 enum WeatherStatus { initial, loading, loaded, error }
@@ -5,9 +8,9 @@ enum WeatherStatus { initial, loading, loaded, error }
 @immutable
 class WeatherState {
   final WeatherStatus status;
-  final Map<String, dynamic>? currentWeather;
-  final Map<String, dynamic>? hourlyWeather;
-  final Map<String, dynamic>? dailyWeather;
+  final CurrentWeatherInfo? currentWeather;
+  final HourlyWeatherInfo? hourlyWeather;
+  final DailyWeatherInfo? dailyWeather;
   final String? cityLabel;
   final String? errorMessage;
  
@@ -22,9 +25,9 @@ class WeatherState {
  
   WeatherState copyWith({
     WeatherStatus? status,
-    Map<String, dynamic>? currentWeather,
-    Map<String, dynamic>? hourlyWeather,
-    Map<String, dynamic>? dailyWeather,
+    CurrentWeatherInfo? currentWeather,
+    HourlyWeatherInfo? hourlyWeather,
+    DailyWeatherInfo? dailyWeather,
     String? cityLabel,
     String? errorMessage,
   }) {

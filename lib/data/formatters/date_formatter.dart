@@ -17,7 +17,7 @@ class DateFormatter {
 
   static String formatDay(String? isoDate, {required int index}) {
     if (isoDate == null) return '-';
-    if (index == 0) return 'Завтра';
+    if (index == 0) return 'Сегодня';
 
     final date = DateTime.tryParse(isoDate);
     if (date == null) return isoDate;

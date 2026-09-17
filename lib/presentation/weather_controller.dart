@@ -1,5 +1,5 @@
-import 'package:breeze/data/geocode_result.dart';
-import 'package:breeze/data/weather_location.dart';
+import 'package:breeze/data/model/geocode_result.dart';
+import 'package:breeze/data/model/weather_location.dart';
 import 'package:breeze/domain/weather_repository.dart';
 import 'package:breeze/presentation/city_search_state.dart';
 import 'package:breeze/presentation/weather_state.dart';
@@ -57,8 +57,8 @@ class WeatherController {
       weatherState.value = WeatherState(
         status: WeatherStatus.loaded,
         currentWeather: current,
-        hourlyWeather: hourly["hourly"],
-        dailyWeather: daily["daily"],
+        hourlyWeather: hourly,
+        dailyWeather: daily,
         cityLabel: location.label,
       );
     } catch(e) {

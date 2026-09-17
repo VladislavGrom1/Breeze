@@ -2,18 +2,14 @@ import 'package:breeze/app/constants/current_field.dart';
 import 'package:breeze/app/constants/daily_field.dart';
 import 'package:breeze/app/constants/hourly_field.dart';
 import 'package:breeze/app/http_client.dart';
-import 'package:breeze/data/geocode_result.dart';
-import 'package:breeze/data/weather_location.dart';
 
 class WeatherApiService {
   final HttpClient _client;
   final String baseUrl;
  
-  WeatherApiService({required this.baseUrl, HttpClient? client})
-      : _client = client ?? HttpClient();
+  WeatherApiService({required this.baseUrl, HttpClient? client}) : _client = client ?? HttpClient();
  
- 
-  Future<List<GeocodeResult>> geocode(String name, {int count = 5}) async {
+  Future<List<Map<String, dynamic>>> geocode(String name, {int count = 5}) async {
     final uri = Uri.parse('$baseUrl/v1/geocode').replace(
       queryParameters: {
         'name': name,
@@ -21,11 +17,11 @@ class WeatherApiService {
       },
     );
     final data = await _client.getData(uri);
-    final items = data['items'] as List<dynamic>;
-    return items.map((e) => GeocodeResult.fromJson(e as Map<String, dynamic>)).toList();
+    final items = (data['items'] as List).cast<Map<String, dynamic>>();
+    return items;
   }
  
-  Future<WeatherLocation> createLocation({
+  Future<Map<String, dynamic>> createLocation({
     required double latitude,
     required double longitude,
     String? label,
@@ -36,20 +32,20 @@ class WeatherApiService {
       'longitude': longitude,
       'label': ?label,
     });
-    return WeatherLocation.fromJson(data);
+    return data;
   }
  
-  Future<List<WeatherLocation>> getSavedLocations() async {
+  Future<List<Map<String, dynamic>>> getSavedLocations() async {
     final uri = Uri.parse('$baseUrl/v1/locations');
     final data = await _client.getData(uri);
-    final items = data['items'] as List<dynamic>;
-    return items.map((e) => WeatherLocation.fromJson(e as Map<String, dynamic>)).toList();
+    final items = (data['items'] as List).cast<Map<String, dynamic>>();
+    return items;
   }
  
-  Future<WeatherLocation> getSavedLocation(String locationId) async {
+  Future<Map<String, dynamic>> getSavedLocation(String locationId) async {
     final uri = Uri.parse('$baseUrl/v1/locations/$locationId');
     final data = await _client.getData(uri);
-    return WeatherLocation.fromJson(data);
+    return data;
   }
  
   Future<void> deleteSavedLocation(String locationId) async {
@@ -59,7 +55,12 @@ class WeatherApiService {
  
   Future<Map<String, dynamic>> getCurrentWeather(
     String locationId, {
-    List<String> fields = const [CurrentField.temperature2m, CurrentField.weatherCode],
+    List<String> fields = const [
+      CurrentField.weatherCode,
+      CurrentField.temperature2m, 
+      CurrentField.apparentTemperature,
+      CurrentField.relativeHumidity2m 
+    ],
   }) async {
     final uri = Uri.parse('$baseUrl/v1/locations/$locationId/current').replace(
       queryParameters: {'fields': fields},
@@ -69,7 +70,12 @@ class WeatherApiService {
  
   Future<Map<String, dynamic>> getHourlyWeather(
     String locationId, {
-    List<String> fields = const [HourlyField.temperature2m, HourlyField.weatherCode],
+    List<String> fields = const [
+      HourlyField.weatherCode,
+      HourlyField.temperature2m,
+      HourlyField.apparentTemperature,
+      HourlyField.relativeHumidity2m 
+    ],
     int forecastDays = 1,
     int pastDays = 0,
     String? startDate,
@@ -90,8 +96,10 @@ class WeatherApiService {
   Future<Map<String, dynamic>> getDailyWeather(
     String locationId, {
     List<String> fields = const [
-      DailyField.temperature2mMean, 
-      DailyField.weatherCode
+      DailyField.weatherCode,
+      DailyField.temperature2mMean,
+      DailyField.temperature2mMin,
+      DailyField.temperature2mMax,       
     ],
     int forecastDays = 7,
   }) async {
