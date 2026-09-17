@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:breeze/app/service_provider.dart';
+import 'package:breeze/app/theme/custom_text_style.dart';
 import 'package:breeze/presentation/city_search_state.dart';
 import 'package:breeze/presentation/weather_controller.dart';
 import 'package:breeze/presentation/weather_state.dart';
@@ -59,14 +60,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.grey,
-        title: const Text(
-          'Beezer',
-          style: TextStyle(fontSize: 30, color: Colors.white),
-        ),
-      ),
-      backgroundColor: const Color.fromARGB(255, 217, 215, 215),
+      backgroundColor: const Color.fromARGB(221, 119, 178, 225),
       body: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -81,117 +75,169 @@ class _WeatherScreenState extends State<WeatherScreen> {
   Widget _buildSearchLocationsWidget() {
     return Expanded(
       flex: 1,
-      child: Padding(
-        padding: const EdgeInsets.only(
-          left: 40,
-          right: 40,
-          top: 20,
-          bottom: 20,
-        ),
-        child: Column(
-          children: [
-            TextField(
-              controller: _searchController,
-              decoration: const InputDecoration(
-                labelText: 'Название города',
-                suffixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
+      child: Material(
+        color: const Color.fromARGB(255, 25, 41, 61),
+        child: Padding(
+          padding: const EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: 20,
+          ),
+          child: Column(
+            children: [
+              TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: const Color.fromARGB(255, 51, 63, 70),
+                  label: Text(
+                    "Поиск",
+                    style: CustomTextStyle.body.copyWith(
+                      fontSize: 20,
+                      color: Colors.grey
+                    ),
+                  ),
+                  floatingLabelBehavior: FloatingLabelBehavior.never,
+                  prefixIcon: Icon(Icons.search, color: Colors.grey),
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: Colors.grey,
+                      width: 20
+                    ),
+                    borderRadius: BorderRadius.all(Radius.circular(16)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: Colors.grey, width: 3),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                style: CustomTextStyle.body,
+                textInputAction: TextInputAction.search,
+                onChanged: _onSearchChanged,
               ),
-              textInputAction: TextInputAction.search,
-              onChanged: _onSearchChanged,
-            ),
-            const SizedBox(height: 20),
-            Expanded(
-              child: ValueListenableBuilder<CitySearchState>(
-                valueListenable: _controller.searchState,
-                builder: (context, searchState, _) {
-                  switch (searchState.status) {
-                    case CitySearchStatus.initial:
-                      return const SizedBox.shrink();
-                    case CitySearchStatus.loading:
-                      return const Center(child: CircularProgressIndicator());
-                    case CitySearchStatus.error:
-                      return Center(
-                        child: SelectableText('Ошибка: ${searchState.errorMessage}'),
-                      );
-                    case CitySearchStatus.loaded:
-                      return Scrollbar(
-                        controller: _searchScrollController,
-                        thumbVisibility: true,
-                        child: CustomScrollView(
+              const SizedBox(height: 20),
+              Expanded(
+                child: ValueListenableBuilder<CitySearchState>(
+                  valueListenable: _controller.searchState,
+                  builder: (context, searchState, _) {
+                    switch (searchState.status) {
+                      case CitySearchStatus.initial:
+                        return Center(
+                          child: Column(
+                            children: [
+                              Text(
+                                "Нет сохранённых локаций",
+                                style: CustomTextStyle.titleRegular,
+                                textAlign: TextAlign.center,
+                              ),
+                              SizedBox(height: 10),
+                              Text(
+                                "Введите название локации в поиске",
+                                style: CustomTextStyle.body,
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          )
+                        );
+                      case CitySearchStatus.loading:
+                        return const Center(child: CircularProgressIndicator());
+                      case CitySearchStatus.error:
+                        return Center(
+                          child: SelectableText('Ошибка: ${searchState.errorMessage}'),
+                        );
+                      case CitySearchStatus.loaded:
+                        final query = _searchController.text.trim();
+                        final hasQuery = query.isNotEmpty;
+                        final items = hasQuery ? searchState.searchResults : searchState.savedLocations;
+
+                        if (items.isEmpty) {
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  hasQuery ? "Локации не найдены" : "Нет сохранённых локаций",
+                                  style: CustomTextStyle.titleRegular,
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 10),
+                                Text(
+                                  hasQuery ? "Измените запрос" : "Введите название локации в поиске",
+                                  style: CustomTextStyle.body,
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+
+                        return Scrollbar(
                           controller: _searchScrollController,
-                          slivers: [
-                            if (searchState.searchResults.isEmpty)
+                          thumbVisibility: true,
+                          child: CustomScrollView(
+                            controller: _searchScrollController,
+                            slivers: [
                               SliverList.separated(
-                                itemCount: searchState.savedLocations.length,
+                                itemCount: items.length,
                                 separatorBuilder: (_, _) => const SizedBox(height: 10),
                                 itemBuilder: (context, index) {
-                                  final location =
-                                      searchState.savedLocations[index];
-                                  return Material(
-                                    color: Colors.grey,
-                                    child: ListTile(
-                                      title: Text(
-                                        location.label ?? "Имя отсутствует",
+                                  if (hasQuery) {
+                                    final city = searchState.searchResults[index];
+                                    return Material(
+                                      color: Colors.transparent,
+                                      borderRadius: BorderRadius.circular(16),
+                                      clipBehavior: Clip.antiAlias,
+                                      child: ListTile(
+                                        title: Text(city.name, style: CustomTextStyle.body),
+                                        subtitle: city.country != null
+                                            ? Text(
+                                                city.country!, 
+                                                style: CustomTextStyle.body.copyWith(fontSize: 12, color: Colors.grey),
+                                              )
+                                            : null,
+                                        trailing: const Icon(Icons.chevron_right, color: Colors.white),
+                                        onTap: () => _controller.selectCity(city),
                                       ),
-                                      subtitle: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            "Ш:${location.latitude} Д:${location.longitude}",
-                                          ),
-                                          Text(location.timezone ?? "-"),
-                                        ],
-                                      ),
-                                      trailing: IconButton(
-                                        icon: const Icon(
-                                          Icons.delete,
-                                          color: Colors.red,
+                                    );
+                                  } else {
+                                    final location = searchState.savedLocations[index];
+                                    return Material(
+                                      color: Colors.transparent,
+                                      child: ListTile(
+                                        tileColor: const Color.fromARGB(255, 51, 63, 70),
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                        title: Text(
+                                          location.label ?? "Имя отсутствует",
+                                          style: CustomTextStyle.titleBold.copyWith(fontSize: 20),
                                         ),
-                                        onPressed: () async {
-                                          await _controller
-                                              .deleteSavedLocation(location);
-                                        },
+                                        subtitle: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text("Ш:${location.latitude} Д:${location.longitude}", style: CustomTextStyle.subtitle),
+                                            const SizedBox(height: 20),
+                                            Text(location.timezone ?? "-", style: CustomTextStyle.subtitle),
+                                          ],
+                                        ),
+                                        trailing: IconButton(
+                                          icon: const Icon(Icons.delete, color: Colors.red),
+                                          onPressed: () async => _controller.deleteSavedLocation(location),
+                                        ),
+                                        onTap: () async => _controller.getWeather(location),
                                       ),
-                                      onTap: () async {
-                                        await _controller.getWeather(
-                                          location,
-                                        );
-                                      },
-                                    ),
-                                  );
-                                },
-                              )
-                            else
-                              SliverList.separated(
-                                itemCount: searchState.searchResults.length,
-                                separatorBuilder: (_, _) => const SizedBox(height: 1),
-                                itemBuilder: (context, index) {
-                                  final city =
-                                      searchState.searchResults[index];
-                                  return ListTile(
-                                    title: Text(city.name),
-                                    subtitle: city.country != null
-                                        ? Text(city.country!)
-                                        : null,
-                                    trailing: const Icon(
-                                      Icons.chevron_right,
-                                    ),
-                                    onTap: () => _controller.selectCity(city),
-                                  );
+                                    );
+                                  }
                                 },
                               ),
-                          ],
-                        ),
-                      );
-                  }
-                },
+                            ],
+                          ),
+                        );
+                    }
+                  },
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -233,22 +279,25 @@ class _WeatherScreenState extends State<WeatherScreen> {
                           children: [
                             Text(
                               weatherState.cityLabel ?? "Нет данных",
-                              style: Theme.of(context).textTheme.titleLarge,
+                              style: CustomTextStyle.titleRegular,
                             ),
-                            const SizedBox(height: 8),
                             Text(
                               temp != null ? '$temp°C' : 'Нет данных',
-                              style: Theme.of(
-                                context,
-                              ).textTheme.headlineMedium,
+                              style: CustomTextStyle.titleRegular.copyWith(fontSize: 50),
                             ),
                             const SizedBox(height: 40),
                           ],
                         ),
                       ),
-                      SliverToBoxAdapter(child: HourlyWeatherWidget(hourlyWeather: weatherState.hourlyWeather)),
-                      const SliverToBoxAdapter(child: SizedBox(height: 20)),
-                      SliverToBoxAdapter(child: DailyWeatherWidget(dailyWeather: weatherState.dailyWeather)),
+                      SliverToBoxAdapter(
+                        child: HourlyWeatherWidget(hourlyWeather: weatherState.hourlyWeather)
+                      ),
+                      const SliverToBoxAdapter(
+                        child: SizedBox(height: 20)
+                      ),
+                      SliverToBoxAdapter(
+                        child: DailyWeatherWidget(dailyWeather: weatherState.dailyWeather)
+                      ),
                     ],
                   ),
                 );

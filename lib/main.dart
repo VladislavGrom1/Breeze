@@ -22,6 +22,7 @@ class MyApp extends StatelessWidget {
         title: 'Breeze',
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+          fontFamily: 'SF-Pro-Display',
         ),
         home: const WeatherScreen(),
       ),

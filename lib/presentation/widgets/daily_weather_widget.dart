@@ -1,7 +1,9 @@
+import 'package:breeze/app/constants/weather_type.dart';
 import 'package:breeze/app/util/mouse_drag_scroll_behavior.dart';
 import 'package:breeze/data/formatters/date_formatter.dart';
 import 'package:breeze/data/model/daily_weather_info.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 
 class DailyWeatherWidget extends StatelessWidget {
   final DailyWeatherInfo? dailyWeather;
@@ -40,6 +42,7 @@ class DailyWeatherWidget extends StatelessWidget {
                         separatorBuilder: (_, _) => const SizedBox(width: 10),
                         itemBuilder: (context, index) {
                           final weatherInfo = weatherPoints[index];
+                          final weatherType = WeatherType.fromWmo(weatherInfo.weatherCode ?? 0);
                           return SizedBox(
                             width: 90,
                             child: Column(
@@ -50,6 +53,12 @@ class DailyWeatherWidget extends StatelessWidget {
                                   DateFormatter.formatDay(weatherInfo.date.toString(), index: index),
                                   style: Theme.of(context).textTheme.bodySmall,
                                   textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 10),
+                                SvgPicture.asset(
+                                  weatherType.iconAsset,
+                                  width: 30,
+                                  height: 30,
                                 ),
                                 const SizedBox(height: 10),
                                 Text(
