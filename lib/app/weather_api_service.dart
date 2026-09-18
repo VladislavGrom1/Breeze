@@ -59,6 +59,10 @@ class WeatherApiService {
       CurrentField.weatherCode,
       CurrentField.temperature2m, 
       CurrentField.apparentTemperature,
+      CurrentField.windSpeed10m,
+      CurrentField.windDirection10m,
+      CurrentField.windGusts10m,
+      CurrentField.pressureMsl,
       CurrentField.relativeHumidity2m 
     ],
   }) async {

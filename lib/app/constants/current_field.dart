@@ -4,5 +4,8 @@ class CurrentField {
   static const apparentTemperature = 'apparent_temperature';
   static const relativeHumidity2m = 'relative_humidity_2m';
   static const windSpeed10m = 'wind_speed_10m';
+  static const windDirection10m = 'wind_direction_10m';
+  static const windGusts10m = 'wind_gusts_10m';
+  static const pressureMsl = "pressure_msl";
   static const isDay = 'is_day';
 }

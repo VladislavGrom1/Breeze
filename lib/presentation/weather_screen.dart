@@ -1,11 +1,16 @@
 import 'dart:async';
+import 'package:breeze/app/constants/weather_type.dart';
 import 'package:breeze/app/service_provider.dart';
 import 'package:breeze/app/theme/custom_text_style.dart';
 import 'package:breeze/presentation/city_search_state.dart';
 import 'package:breeze/presentation/weather_controller.dart';
 import 'package:breeze/presentation/weather_state.dart';
+import 'package:breeze/presentation/widgets/apparent_weather_widget.dart';
 import 'package:breeze/presentation/widgets/daily_weather_widget.dart';
 import 'package:breeze/presentation/widgets/hourly_weather_widget.dart';
+import 'package:breeze/presentation/widgets/humidity_weather_widget.dart';
+import 'package:breeze/presentation/widgets/pressure_weather_widget.dart';
+import 'package:breeze/presentation/widgets/wind_weather_widget.dart';
 import 'package:flutter/material.dart';
 
 class WeatherScreen extends StatefulWidget {
@@ -93,7 +98,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
                   fillColor: const Color.fromARGB(255, 51, 63, 70),
                   label: Text(
                     "Поиск",
-                    style: CustomTextStyle.body.copyWith(
+                    style: CustomTextStyle.titleMedium.copyWith(
                       fontSize: 20,
                       color: Colors.grey
                     ),
@@ -112,7 +117,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
-                style: CustomTextStyle.body,
+                style: CustomTextStyle.titleMedium,
                 textInputAction: TextInputAction.search,
                 onChanged: _onSearchChanged,
               ),
@@ -134,7 +139,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
                               SizedBox(height: 10),
                               Text(
                                 "Введите название локации в поиске",
-                                style: CustomTextStyle.body,
+                                style: CustomTextStyle.titleMedium,
                                 textAlign: TextAlign.center,
                               ),
                             ],
@@ -164,7 +169,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
                                 const SizedBox(height: 10),
                                 Text(
                                   hasQuery ? "Измените запрос" : "Введите название локации в поиске",
-                                  style: CustomTextStyle.body,
+                                  style: CustomTextStyle.titleMedium,
                                   textAlign: TextAlign.center,
                                 ),
                               ],
@@ -189,11 +194,11 @@ class _WeatherScreenState extends State<WeatherScreen> {
                                       borderRadius: BorderRadius.circular(16),
                                       clipBehavior: Clip.antiAlias,
                                       child: ListTile(
-                                        title: Text(city.name, style: CustomTextStyle.body),
+                                        title: Text(city.name, style: CustomTextStyle.titleMedium),
                                         subtitle: city.country != null
                                             ? Text(
                                                 city.country!, 
-                                                style: CustomTextStyle.body.copyWith(fontSize: 12, color: Colors.grey),
+                                                style: CustomTextStyle.titleMedium.copyWith(fontSize: 12, color: Colors.grey),
                                               )
                                             : null,
                                         trailing: const Icon(Icons.chevron_right, color: Colors.white),
@@ -246,19 +251,35 @@ class _WeatherScreenState extends State<WeatherScreen> {
   Widget _buildLocationWeatherInfoWidget() {
     return Expanded(
       flex: 2,
-      child: Padding(
-        padding: const EdgeInsets.only(
-          left: 40,
-          right: 40,
-          top: 20,
-          bottom: 20,
-        ),
-        child: ValueListenableBuilder<WeatherState>(
+      child: ValueListenableBuilder<WeatherState>(
           valueListenable: _controller.weatherState,
           builder: (context, weatherState, child) {
             switch (weatherState.status) {
               case WeatherStatus.initial:
-                return const SizedBox.shrink();
+                return Center(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.search,
+                        size: 80,
+                        color: Colors.white,
+                      ),
+                      Text(
+                        "Погода",
+                        style: CustomTextStyle.titleRegular,
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 10),
+                      Text(
+                        "Выберите локацию для получения информации о погоде",
+                        style: CustomTextStyle.titleMedium,
+                        textAlign: TextAlign.center,
+                      ),
+                    ]
+                  ),
+                );
               case WeatherStatus.loading:
                 return const Center(child: CircularProgressIndicator());
               case WeatherStatus.error:
@@ -267,44 +288,79 @@ class _WeatherScreenState extends State<WeatherScreen> {
                 );
               case WeatherStatus.loaded:
                 final temp = weatherState.currentWeather?.temperature2m;
-                return Scrollbar(
-                  controller: _weatherScrollController,
-                  thumbVisibility: true,
-                  child: CustomScrollView(
-                    controller: _weatherScrollController,
-                    slivers: [
-                      SliverToBoxAdapter(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Text(
-                              weatherState.cityLabel ?? "Нет данных",
-                              style: CustomTextStyle.titleRegular,
+                final maxTemp = weatherState.dailyWeather?.points[0].temperature2mMax ?? "-";
+                final minTemp = weatherState.dailyWeather?.points[0].temperature2mMin ?? "-";
+                final weatherType = WeatherType.fromWmo(weatherState.currentWeather?.weatherCode ?? 0);
+                return Padding(
+                      padding: const EdgeInsets.only(
+                        left: 40,
+                        right: 40,
+                        top: 20,
+                        bottom: 20,
+                      ),
+                      child: CustomScrollView(
+                        controller: _weatherScrollController,
+                        slivers: [
+                          SliverToBoxAdapter(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                const SizedBox(height: 40),
+                                Text(
+                                  weatherState.cityLabel ?? "Нет данных",
+                                  style: CustomTextStyle.titleRegular,
+                                ),
+                                Text(
+                                  temp != null ? '$temp°C' : 'Нет данных',
+                                  style: CustomTextStyle.titleRegular.copyWith(fontSize: 60),
+                                ),
+                                Text(
+                                  weatherType.weatherDesc,
+                                  style: CustomTextStyle.titleMedium,
+                                ),
+                                Text(
+                                  "Макс.: $maxTemp°C, мин.: $minTemp°C",
+                                  style: CustomTextStyle.titleMedium,
+                                ),
+                                const SizedBox(height: 40),
+                              ],
                             ),
-                            Text(
-                              temp != null ? '$temp°C' : 'Нет данных',
-                              style: CustomTextStyle.titleRegular.copyWith(fontSize: 50),
-                            ),
-                            const SizedBox(height: 40),
-                          ],
-                        ),
+                          ),
+                          SliverToBoxAdapter(
+                            child: HourlyWeatherWidget(hourlyWeather: weatherState.hourlyWeather)
+                          ),
+                          const SliverToBoxAdapter(
+                            child: SizedBox(height: 20)
+                          ),
+                          SliverToBoxAdapter(
+                            child: IntrinsicHeight(
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  WindWeatherWidget(currentWeatherInfo: weatherState.currentWeather),
+                                  SizedBox(width: 10),
+                                  ApparentWeatherWidget(currentWeatherInfo: weatherState.currentWeather),
+                                  SizedBox(width: 10),
+                                  PressureWeatherWidget(currentWeatherInfo: weatherState.currentWeather),
+                                  SizedBox(width: 10),
+                                  HumidityWeatherWidget(currentWeatherInfo: weatherState.currentWeather)
+                                ],
+                              ),
+                            )
+                          ),
+                          const SliverToBoxAdapter(
+                            child: SizedBox(height: 20)
+                          ),
+                          SliverToBoxAdapter(
+                            child: DailyWeatherWidget(dailyWeather: weatherState.dailyWeather)
+                          ),
+                        ],
                       ),
-                      SliverToBoxAdapter(
-                        child: HourlyWeatherWidget(hourlyWeather: weatherState.hourlyWeather)
-                      ),
-                      const SliverToBoxAdapter(
-                        child: SizedBox(height: 20)
-                      ),
-                      SliverToBoxAdapter(
-                        child: DailyWeatherWidget(dailyWeather: weatherState.dailyWeather)
-                      ),
-                    ],
-                  ),
                 );
             }
           },
         ),
-      ),
     );
   }
 }

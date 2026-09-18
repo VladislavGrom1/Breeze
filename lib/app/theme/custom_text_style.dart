@@ -20,8 +20,14 @@ class CustomTextStyle {
     color: Colors.white,
   );
 
-  static final TextStyle body = TextStyle(
+  static final TextStyle titleMedium = TextStyle(
     fontSize: 16,
+    fontWeight: FontWeight.w600,
+    color: Colors.white,
+  );
+
+  static final TextStyle body = TextStyle(
+    fontSize: 12,
     fontWeight: FontWeight.w500,
     color: Colors.white,
   );

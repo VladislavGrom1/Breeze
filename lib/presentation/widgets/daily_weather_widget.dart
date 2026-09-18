@@ -1,4 +1,5 @@
 import 'package:breeze/app/constants/weather_type.dart';
+import 'package:breeze/app/theme/custom_text_style.dart';
 import 'package:breeze/app/util/mouse_drag_scroll_behavior.dart';
 import 'package:breeze/data/formatters/date_formatter.dart';
 import 'package:breeze/data/model/daily_weather_info.dart';
@@ -19,6 +20,7 @@ class DailyWeatherWidget extends StatelessWidget {
     final itemCount = weatherPoints.length;
 
     return Card(
+      color: const Color.fromARGB(255, 39, 128, 200),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
         child: Column(
@@ -27,7 +29,7 @@ class DailyWeatherWidget extends StatelessWidget {
           children: [
             Text(
               "Прогноз на 7 дней",
-              style: Theme.of(context).textTheme.titleMedium,
+              style: CustomTextStyle.titleMedium,
             ),
             const SizedBox(height: 8),
             SizedBox(
@@ -37,6 +39,7 @@ class DailyWeatherWidget extends StatelessWidget {
                   : ScrollConfiguration(
                     behavior: MouseDragScrollBehavior(),
                     child: ListView.separated(
+                        physics: BouncingScrollPhysics(),
                         scrollDirection: Axis.horizontal,
                         itemCount: itemCount,
                         separatorBuilder: (_, _) => const SizedBox(width: 10),
@@ -51,7 +54,7 @@ class DailyWeatherWidget extends StatelessWidget {
                               children: [
                                 Text(
                                   DateFormatter.formatDay(weatherInfo.date.toString(), index: index),
-                                  style: Theme.of(context).textTheme.bodySmall,
+                                  style: CustomTextStyle.body.copyWith(fontWeight: FontWeight.bold),
                                   textAlign: TextAlign.center,
                                 ),
                                 const SizedBox(height: 10),
@@ -63,7 +66,7 @@ class DailyWeatherWidget extends StatelessWidget {
                                 const SizedBox(height: 10),
                                 Text(
                                   weatherInfo.temperature2mMean != null ? '${weatherInfo.temperature2mMean} °C' : '-',
-                                  style: Theme.of(context).textTheme.bodyLarge,
+                                  style: CustomTextStyle.body.copyWith(fontWeight: FontWeight.bold),
                                   textAlign: TextAlign.center,
                                 ),
                               ],
