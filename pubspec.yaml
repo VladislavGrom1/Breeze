@@ -12,6 +12,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   http: ^1.6.0
   flutter_svg: ^2.3.0
+  lottie: ^3.6.1
 
 dev_dependencies:
   flutter_test:
@@ -33,3 +34,4 @@ flutter:
           weight: 700
   assets:
     - assets/weather_icons/
+    - assets/animations/

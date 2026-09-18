@@ -12,6 +12,7 @@ import 'package:breeze/presentation/widgets/humidity_weather_widget.dart';
 import 'package:breeze/presentation/widgets/pressure_weather_widget.dart';
 import 'package:breeze/presentation/widgets/wind_weather_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 
 class WeatherScreen extends StatefulWidget {
   const WeatherScreen({super.key});
@@ -20,8 +21,9 @@ class WeatherScreen extends StatefulWidget {
   State<WeatherScreen> createState() => _WeatherScreenState();
 }
 
-class _WeatherScreenState extends State<WeatherScreen> {
-  late final WeatherController _controller;
+class _WeatherScreenState extends State<WeatherScreen> with TickerProviderStateMixin{
+  late final WeatherController _weatherController;
+  late final AnimationController _animationController;
   final _searchController = TextEditingController();
   final _searchScrollController = ScrollController();
   final _weatherScrollController = ScrollController();
@@ -33,9 +35,10 @@ class _WeatherScreenState extends State<WeatherScreen> {
     super.didChangeDependencies();
     if (!_initialized) {
       final repository = ServiceProvider.of(context);
-      _controller = WeatherController(repository);
+      _weatherController = WeatherController(repository);
+      _animationController = AnimationController(vsync: this);
       _initialized = true;
-      _controller.getSavedLocations();
+      _weatherController.getSavedLocations();
     }
   }
 
@@ -43,22 +46,23 @@ class _WeatherScreenState extends State<WeatherScreen> {
     _debounce?.cancel();
 
     if (value.isEmpty) {
-      _controller.getSavedLocations();
+      _weatherController.getSavedLocations();
       return;
     }
 
     _debounce = Timer(const Duration(milliseconds: 200), () {
-      _controller.searchCities(value);
+      _weatherController.searchCities(value);
     });
   }
 
   @override
   void dispose() {
     _debounce?.cancel();
-    _controller.dispose();
+    _weatherController.dispose();
     _searchController.dispose();
     _searchScrollController.dispose();
     _weatherScrollController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -66,13 +70,32 @@ class _WeatherScreenState extends State<WeatherScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color.fromARGB(221, 119, 178, 225),
-      body: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      body: Stack(
         children: [
-          _buildSearchLocationsWidget(),
-          _buildLocationWeatherInfoWidget(),
-        ],
+          Positioned.fill(
+            child: Opacity(
+              opacity: 0.25,
+              child: Lottie.asset(
+                  'assets/animations/sunrise.json',
+                  controller: _animationController,
+                  onLoaded: (composition) {
+                    _animationController
+                      ..duration = composition.duration
+                      ..repeat(period: composition.duration * 1.5);
+                  },
+                  fit: BoxFit.contain
+                ),
+            ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildSearchLocationsWidget(),
+              _buildLocationWeatherInfoWidget(),
+            ],
+          ),
+        ] 
       ),
     );
   }
@@ -81,7 +104,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
     return Expanded(
       flex: 1,
       child: Material(
-        color: const Color.fromARGB(255, 25, 41, 61),
+        color: const Color.fromARGB(255, 25, 41, 61).withValues(alpha: 0.5),
         child: Padding(
           padding: const EdgeInsets.only(
             left: 20,
@@ -105,6 +128,21 @@ class _WeatherScreenState extends State<WeatherScreen> {
                   ),
                   floatingLabelBehavior: FloatingLabelBehavior.never,
                   prefixIcon: Icon(Icons.search, color: Colors.grey),
+                  suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: _searchController, 
+                    builder: (context, value, _) {
+                      if(_searchController.text.isEmpty){
+                        return SizedBox.shrink();
+                      }
+                      return IconButton(
+                        icon: Icon(Icons.close, color: Colors.red),
+                        onPressed: () {
+                          _searchController.clear();
+                          _onSearchChanged('');
+                        }, 
+                      );
+                    },
+                  ),
                   border: OutlineInputBorder(
                     borderSide: BorderSide(
                       color: Colors.grey,
@@ -124,27 +162,11 @@ class _WeatherScreenState extends State<WeatherScreen> {
               const SizedBox(height: 20),
               Expanded(
                 child: ValueListenableBuilder<CitySearchState>(
-                  valueListenable: _controller.searchState,
+                  valueListenable: _weatherController.searchState,
                   builder: (context, searchState, _) {
                     switch (searchState.status) {
                       case CitySearchStatus.initial:
-                        return Center(
-                          child: Column(
-                            children: [
-                              Text(
-                                "Нет сохранённых локаций",
-                                style: CustomTextStyle.titleRegular,
-                                textAlign: TextAlign.center,
-                              ),
-                              SizedBox(height: 10),
-                              Text(
-                                "Введите название локации в поиске",
-                                style: CustomTextStyle.titleMedium,
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          )
-                        );
+                        return SizedBox.shrink();
                       case CitySearchStatus.loading:
                         return const Center(child: CircularProgressIndicator());
                       case CitySearchStatus.error:
@@ -161,6 +183,11 @@ class _WeatherScreenState extends State<WeatherScreen> {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
+                                Icon(
+                                  hasQuery ? Icons.not_listed_location : Icons.location_off,
+                                  size: 80,
+                                  color: Colors.white,
+                                ),
                                 Text(
                                   hasQuery ? "Локации не найдены" : "Нет сохранённых локаций",
                                   style: CustomTextStyle.titleRegular,
@@ -198,11 +225,11 @@ class _WeatherScreenState extends State<WeatherScreen> {
                                         subtitle: city.country != null
                                             ? Text(
                                                 city.country!, 
-                                                style: CustomTextStyle.titleMedium.copyWith(fontSize: 12, color: Colors.grey),
+                                                style: CustomTextStyle.titleMedium.copyWith(fontSize: 12, color: Colors.white),
                                               )
                                             : null,
                                         trailing: const Icon(Icons.chevron_right, color: Colors.white),
-                                        onTap: () => _controller.selectCity(city),
+                                        onTap: () => _weatherController.selectCity(city),
                                       ),
                                     );
                                   } else {
@@ -226,9 +253,9 @@ class _WeatherScreenState extends State<WeatherScreen> {
                                         ),
                                         trailing: IconButton(
                                           icon: const Icon(Icons.delete, color: Colors.red),
-                                          onPressed: () async => _controller.deleteSavedLocation(location),
+                                          onPressed: () async => _weatherController.deleteSavedLocation(location),
                                         ),
-                                        onTap: () async => _controller.getWeather(location),
+                                        onTap: () async => _weatherController.getWeather(location),
                                       ),
                                     );
                                   }
@@ -252,7 +279,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
     return Expanded(
       flex: 2,
       child: ValueListenableBuilder<WeatherState>(
-          valueListenable: _controller.weatherState,
+          valueListenable: _weatherController.weatherState,
           builder: (context, weatherState, child) {
             switch (weatherState.status) {
               case WeatherStatus.initial:

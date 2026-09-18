@@ -20,7 +20,7 @@ class DailyWeatherWidget extends StatelessWidget {
     final itemCount = weatherPoints.length;
 
     return Card(
-      color: const Color.fromARGB(255, 39, 128, 200),
+      color: const Color.fromARGB(255, 39, 128, 200).withValues(alpha: 0.5),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
         child: Column(
