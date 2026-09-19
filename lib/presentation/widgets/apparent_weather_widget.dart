@@ -22,11 +22,14 @@ class ApparentWeatherWidget extends StatelessWidget {
           children: [
             Row(
               children: [
-                Text(
-                  "Ощущ. как", 
-                  style: CustomTextStyle.titleMedium.copyWith(
-                    color: const Color.fromARGB(221, 116, 188, 247)
-                  )
+                Flexible(
+                  child: Text(
+                    "Ощущ. как",
+                    style: CustomTextStyle.titleMedium.copyWith(
+                      color: const Color.fromARGB(221, 116, 188, 247)
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
                 SizedBox(width: 5),
                 Icon(
@@ -40,7 +43,7 @@ class ApparentWeatherWidget extends StatelessWidget {
             Column(
               children: [
                 Text(
-                  "${currentWeatherInfo?.apparentTemperature}°",
+                  "${currentWeatherInfo?.apparentTemperature}°С",
                   style: CustomTextStyle.titleRegular.copyWith(
                     fontWeight: FontWeight.bold
                   ),

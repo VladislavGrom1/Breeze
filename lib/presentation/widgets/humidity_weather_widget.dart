@@ -23,11 +23,14 @@ class HumidityWeatherWidget extends StatelessWidget {
           children: [
             Row(
               children: [
-                Text(
-                  "Влажность", 
-                  style: CustomTextStyle.titleMedium.copyWith(
-                    color: const Color.fromARGB(221, 116, 188, 247)
-                  )
+                Flexible(
+                  child: Text(
+                    "Влажность",
+                    style: CustomTextStyle.titleMedium.copyWith(
+                      color: const Color.fromARGB(221, 116, 188, 247)
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
                 SizedBox(width: 5),
                 SvgPicture.asset(

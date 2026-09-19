@@ -20,11 +20,14 @@ class WindWeatherWidget extends StatelessWidget {
           children: [
             Row(
               children: [
-                Text(
-                  "Ветер", 
-                  style: CustomTextStyle.titleMedium.copyWith(
-                    color: const Color.fromARGB(221, 116, 188, 247)
-                  )
+                Flexible(
+                  child: Text(
+                    "Ветер",
+                    style: CustomTextStyle.titleMedium.copyWith(
+                      color: const Color.fromARGB(221, 116, 188, 247)
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
                 SizedBox(width: 5),
                 SvgPicture.asset(
@@ -58,16 +61,20 @@ class WindWeatherWidget extends StatelessWidget {
 
   Widget _buildRowInfo(String title, String value) {
     return SizedBox(
-      width: 240,
+      width: double.infinity,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            title,
-            style: CustomTextStyle.body.copyWith(
-              fontWeight: FontWeight.bold
+          Flexible(
+            child: Text(
+              title,
+              style: CustomTextStyle.body.copyWith(
+                fontWeight: FontWeight.bold
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
+          const SizedBox(width: 6),
           Text(
             value,
             style: CustomTextStyle.body.copyWith(

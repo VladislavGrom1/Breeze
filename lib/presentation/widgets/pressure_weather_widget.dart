@@ -23,11 +23,14 @@ class PressureWeatherWidget extends StatelessWidget {
           children: [
             Row(
               children: [
-                Text(
-                  "Давление", 
-                  style: CustomTextStyle.titleMedium.copyWith(
-                    color: const Color.fromARGB(221, 116, 188, 247)
-                  )
+                Flexible(
+                  child: Text(
+                    "Давление",
+                    style: CustomTextStyle.titleMedium.copyWith(
+                      color: const Color.fromARGB(221, 116, 188, 247)
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
                 SizedBox(width: 5),
                 SvgPicture.asset(
